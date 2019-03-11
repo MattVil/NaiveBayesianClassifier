@@ -2,14 +2,14 @@ import numpy
 import pandas as pd
 
 from preprocessor import Precessor
-from NaiveBayes import NaiveBayes
+from naiveBayes import NaiveBayes
 
-PATH_DATA = "/home/matthieu/Dataset/adult/adult.data"
-DATASET_COLUMNS = ["age","workclass","fnlwgt","education","education-num","marital-status","occupation","relationship","race","sex","capital-gain","capital-loss","hours-per-week","native-country","income"]
+PATH_DATA = "./data/adult.data"
+DATASET_COLUMNS = ["age","workclass","fnlwgt","education","education_num","marital_status","occupation","relationship","race","sex","capital_gain","capital_loss","hours_per_week","native_country","income"]
 
 
 def loadData():
-    return pd.read_csv(PATH_DATA, names=DATASET_COLUMNS)
+    return pd.read_csv(PATH_DATA, names=DATASET_COLUMNS, sep=", ")
 
 def main():
     data = loadData()

@@ -5,23 +5,20 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 
 class NaiveBayes:
+    """Use the Naive Bayes algorithm and K-Fold cross-Validation on a dataset"""
 
     def __init__(self):
         self.probabilities = {}
         self.confusionMatrix = None
 
-    def training(self, data, K, trainRatio=0.5, validRatio=0.3, testRatio=0.2):
-        """"""
-        self.__Kfold_cross_validation(data, K)
-
-    def __Kfold_cross_validation(self, data, K, trainRatio=0.5, validRatio=0.3, testRatio=0.2):
-        """split dataset + compute classes probabilities"""
+    def Kfold_cross_validation(self, data, K, trainRatio=0.5, validRatio=0.3, testRatio=0.2):
+        """split dataset and repeate K times the cross validation"""
         train, test = train_test_split(data, test_size=testRatio)
 
-        print("\n############## TRAINING ##############")
+        print("\n############# K-FOLD CROSS-VALIDATION #############")
         meanConfusionMatrix = np.zeros([2, 2], dtype = int)
         for k in range(K):
-            xTrain, xValid = self.__splitDataset(train)
+            xTrain, xValid = self.__splitDataset(train, validRatio=0.375)
             print("{}:\tTrain: {}\tVaildation: {}\tTest: {}".format(k, len(xTrain), len(xValid), len(test)))
 
             self.__buildProbabilities(xTrain)
@@ -29,23 +26,23 @@ class NaiveBayes:
             meanConfusionMatrix += confusion
             print(confusion)
 
-        print("\n###### MEAN CONFUSION MATRIX VALIDATION ######")
+        print("\n######### MEAN CONFUSION MATRIX VALIDATION #########")
         meanConfusionMatrix = meanConfusionMatrix / K
         truePos = meanConfusionMatrix[0][0]
-        falsePos = meanConfusionMatrix[1][0] # TODO: maybe change
+        falsePos = meanConfusionMatrix[1][0]
         trueNeg = meanConfusionMatrix[1][1]
         falseNeg = meanConfusionMatrix[0][1]
         precision = truePos / (truePos + falsePos)
         recall = truePos / (truePos + falseNeg)
         f1 = (2 * precision * recall)/(precision + recall)
         print("Precision: {}\tRecall: {}\tF1: {}".format(precision, recall, f1))
-        self.confusionMatrix = meanConfusionMatrix
+        self.confusionMatrix = meanConfusionMatrix.astype(int)
 
-        print("\n###### MEAN CONFUSION MATRIX TEST ######")
+        print("\n########### MEAN CONFUSION MATRIX TEST #############")
         confusionMatrix = np.zeros([2, 2], dtype = int)
         confusionMatrix = self.__test(test)
         truePos = confusionMatrix[0][0]
-        falsePos = confusionMatrix[1][0] # TODO: maybe change
+        falsePos = confusionMatrix[1][0]
         trueNeg = confusionMatrix[1][1]
         falseNeg = confusionMatrix[0][1]
         precision = truePos / (truePos + falsePos)
@@ -55,7 +52,8 @@ class NaiveBayes:
 
 
     def __test(self, data):
-        """"""
+        """Use the table of probabilities made on the training set to look the
+        accuracy on the test set (data)"""
         confusion = np.zeros([2, 2], dtype = int)
         for index, row in data.iterrows():
             probOver, probBelow = 1, 1
@@ -84,14 +82,13 @@ class NaiveBayes:
 
 
     def __buildProbabilities(self, data):
-        """"""
+        """Build the table of probabilities according to the training data"""
         self.probabilities = {}
         nbData = len(data)
         overData = data[data.income == '>50K']
         belowData = data[data.income == '<=50K']
         nbOver = len(overData)
         nbBelow = len(belowData)
-        # print("{}\t{} = {}".format(nbOver, nbBelow, (nbOver+nbBelow)))
         for column in data:
             items = data[column].unique()
             colDic = {}
@@ -105,16 +102,14 @@ class NaiveBayes:
                 except KeyError:
                     nbItemBelow = 1
 
-                # print("{}:\t\t{}/{}\t{}/{}".format(item, nbItemOver, nbOver, nbItemBelow, nbBelow))
                 colDic[item] = ((nbItemOver/nbOver), (nbItemBelow/nbBelow))
             self.probabilities[column] = colDic
 
     def __splitDataset(self, data, trainRatio=0.7, validRatio=0.3):
-        """"""
+        """Split a dataset into 2 sub-set"""
         return train_test_split(data, test_size=validRatio)
 
     def plotConfusionMatrix(self):
-        """"""
         df_cm = pd.DataFrame(self.confusionMatrix, [">50K", "<=50K"], [">50K", "<=50K"])
         plt.figure(figsize = (10,7))
         sn.set(font_scale=1.4)#for label size

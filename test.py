@@ -1,4 +1,4 @@
-import numpy
+import numpy as np
 import pandas as pd
 
 from preprocessor import Precessor
@@ -15,13 +15,20 @@ def loadData():
     return pd.read_csv(PATH_DATA,names=DATASET_COLUMNS,sep=", ",engine='python')
 
 def main():
+
     data = loadData()
-    preprocessor = Precessor()
+
+    print("\n############### PROPROCESS DATA ##################")
+    preprocessor = Precessor(missing_value_method="remove")
     cleanDataset = preprocessor.preprocess(data)
+
+    print("\n###### DATA INFORMATION AFTER PREPROCESSING ######")
     print(cleanDataset.info())
 
     naiveBayesModel = NaiveBayes()
-    naiveBayesModel.training(cleanDataset, 3)
+    naiveBayesModel.Kfold_cross_validation(cleanDataset, 10)
+
+    naiveBayesModel.plotConfusionMatrix()
 
 
 

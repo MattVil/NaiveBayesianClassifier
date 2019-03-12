@@ -10,6 +10,7 @@ class NaiveBayes:
     def __init__(self):
         self.probabilities = {}
         self.confusionMatrix = None
+        self.removedCol = ['income']
 
     def Kfold_cross_validation(self, data, K, trainRatio=0.5, validRatio=0.3, testRatio=0.2):
         """split dataset and repeate K times the cross validation"""
@@ -26,7 +27,7 @@ class NaiveBayes:
             meanConfusionMatrix += confusion
             print(confusion)
 
-        print("\n######### MEAN CONFUSION MATRIX VALIDATION #########")
+        print("\n################# MEAN VALIDATION #################")
         meanConfusionMatrix = meanConfusionMatrix / K
         truePos = meanConfusionMatrix[0][0]
         falsePos = meanConfusionMatrix[1][0]
@@ -36,9 +37,14 @@ class NaiveBayes:
         recall = truePos / (truePos + falseNeg)
         f1 = (2 * precision * recall)/(precision + recall)
         print("Precision: {}\tRecall: {}\tF1: {}".format(precision, recall, f1))
+        wellClassified = truePos + trueNeg
+        badClassified = falseNeg + falsePos
+        totalClassified = wellClassified + badClassified
+        print("Good classification: {:.2f}%\tBad classification: {:.2f}%".format((wellClassified/totalClassified)*100, 
+                                                                               (badClassified/totalClassified)*100))
         self.confusionMatrix = meanConfusionMatrix.astype(int)
 
-        print("\n########### MEAN CONFUSION MATRIX TEST #############")
+        print("\n######################  TEST  #####################")
         confusionMatrix = np.zeros([2, 2], dtype = int)
         confusionMatrix = self.__test(test)
         truePos = confusionMatrix[0][0]
@@ -49,6 +55,12 @@ class NaiveBayes:
         recall = truePos / (truePos + falseNeg)
         f1 = (2 * precision * recall)/(precision + recall)
         print("Precision: {}\tRecall: {}\tF1: {}".format(precision, recall, f1))
+        wellClassified = truePos + trueNeg
+        badClassified = falseNeg + falsePos
+        totalClassified = wellClassified + badClassified
+        print("Good classification: {:.2f}%\tBad classification: {:.2f}%".format((wellClassified/totalClassified)*100, 
+                                                                               (badClassified/totalClassified)*100))
+
 
 
     def __test(self, data):
@@ -58,14 +70,15 @@ class NaiveBayes:
         for index, row in data.iterrows():
             probOver, probBelow = 1, 1
             for col in data:
-                try:
-                    probOver *= self.probabilities[col][row[col]][0]
-                except KeyError:
-                    probOver *= 1/5000
-                try:
-                    probBelow *= self.probabilities[col][row[col]][1]
-                except KeyError:
-                    probBelow *= 1/13000
+                if(col not in self.removedCol):
+                    try:
+                        probOver *= self.probabilities[col][row[col]][0]
+                    except KeyError:
+                        probOver *= 1/5000
+                    try:
+                        probBelow *= self.probabilities[col][row[col]][1]
+                    except KeyError:
+                        probBelow *= 1/13000
             if(probOver > probBelow):
                 if(row['income'] == ">50K"):
                     confusion[0][0] += 1
@@ -115,3 +128,6 @@ class NaiveBayes:
         sn.set(font_scale=1.4)#for label size
         sn.heatmap(df_cm, annot=True,annot_kws={"size": 16})# font size
         plt.show()
+
+    def setRomovedCol(self, col2remove):
+        self.removedCol += col2remove

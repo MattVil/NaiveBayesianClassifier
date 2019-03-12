@@ -26,9 +26,10 @@ def main():
     print(cleanDataset.info())
 
     naiveBayesModel = NaiveBayes()
+    naiveBayesModel.setRomovedCol(["race", "sex", "native_country"])
     naiveBayesModel.Kfold_cross_validation(cleanDataset, 10)
 
-    naiveBayesModel.plotConfusionMatrix()
+    # naiveBayesModel.plotConfusionMatrix()
 
 
 

@@ -21,7 +21,7 @@ def main():
     print(cleanDataset.info())
 
     naiveBayesModel = NaiveBayes()
-    naiveBayesModel.training(cleanDataset, 10)
+    naiveBayesModel.training(cleanDataset, 3)
 
 
 

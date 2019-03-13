@@ -11,6 +11,7 @@ class NaiveBayes:
         self.probabilities = {}
         self.confusionMatrix = None
         self.removedCol = ['income']
+        self.classBalance = None
 
     def Kfold_cross_validation(self, data, K, trainRatio=0.5, validRatio=0.3, testRatio=0.2):
         """split dataset and repeate K times the cross validation"""
@@ -35,12 +36,13 @@ class NaiveBayes:
         falseNeg = meanConfusionMatrix[0][1]
         precision = truePos / (truePos + falsePos)
         recall = truePos / (truePos + falseNeg)
+        MCC = (truePos*trueNeg - falsePos*falseNeg)/np.sqrt((truePos+falsePos)*(truePos+falseNeg)*(trueNeg+falsePos)*(trueNeg+falseNeg))
         f1 = (2 * precision * recall)/(precision + recall)
-        print("Precision: {}\tRecall: {}\tF1: {}".format(precision, recall, f1))
+        print("Precision: {:.3f}\tRecall: {:.3f}\tF1: {:.3f}\tMatthews correlation: {:.3f}".format(precision, recall, f1, MCC))
         wellClassified = truePos + trueNeg
         badClassified = falseNeg + falsePos
         totalClassified = wellClassified + badClassified
-        print("Good classification: {:.2f}%\tBad classification: {:.2f}%".format((wellClassified/totalClassified)*100, 
+        print("Good classification: {:.2f}%\tBad classification: {:.2f}%".format((wellClassified/totalClassified)*100,
                                                                                (badClassified/totalClassified)*100))
         self.confusionMatrix = meanConfusionMatrix.astype(int)
 
@@ -53,12 +55,13 @@ class NaiveBayes:
         falseNeg = confusionMatrix[0][1]
         precision = truePos / (truePos + falsePos)
         recall = truePos / (truePos + falseNeg)
+        MCC = (truePos*trueNeg - falsePos*falseNeg)/np.sqrt((truePos+falsePos)*(truePos+falseNeg)*(trueNeg+falsePos)*(trueNeg+falseNeg))
         f1 = (2 * precision * recall)/(precision + recall)
-        print("Precision: {}\tRecall: {}\tF1: {}".format(precision, recall, f1))
+        print("Precision: {:.3f}\tRecall: {:.3f}\tF1: {:.3f}\tMatthews correlation: {:.3f}".format(precision, recall, f1, MCC))
         wellClassified = truePos + trueNeg
         badClassified = falseNeg + falsePos
         totalClassified = wellClassified + badClassified
-        print("Good classification: {:.2f}%\tBad classification: {:.2f}%".format((wellClassified/totalClassified)*100, 
+        print("Good classification: {:.2f}%\tBad classification: {:.2f}%".format((wellClassified/totalClassified)*100,
                                                                                (badClassified/totalClassified)*100))
 
 
@@ -74,11 +77,11 @@ class NaiveBayes:
                     try:
                         probOver *= self.probabilities[col][row[col]][0]
                     except KeyError:
-                        probOver *= 1/5000
+                        probOver *= 1/self.classBalance[">50K"]
                     try:
                         probBelow *= self.probabilities[col][row[col]][1]
                     except KeyError:
-                        probBelow *= 1/13000
+                        probBelow *= 1/self.classBalance["<=50K"]
             if(probOver > probBelow):
                 if(row['income'] == ">50K"):
                     confusion[0][0] += 1
@@ -120,7 +123,9 @@ class NaiveBayes:
 
     def __splitDataset(self, data, trainRatio=0.7, validRatio=0.3):
         """Split a dataset into 2 sub-set"""
-        return train_test_split(data, test_size=validRatio)
+        train, valid = train_test_split(data, test_size=validRatio)
+        self.classBalance = data.income.value_counts()
+        return train, valid
 
     def plotConfusionMatrix(self):
         df_cm = pd.DataFrame(self.confusionMatrix, [">50K", "<=50K"], [">50K", "<=50K"])
